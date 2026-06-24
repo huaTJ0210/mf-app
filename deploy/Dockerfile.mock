@@ -1,0 +1,28 @@
+# ============================================================
+# Mock Server Dockerfile
+# ============================================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY pnpm-workspace.yaml package.json .npmrc ./
+COPY mock-server/package.json mock-server/
+COPY packages/shared/package.json packages/shared/
+
+RUN pnpm install --frozen-lockfile
+
+COPY mock-server/ mock-server/
+COPY tsconfig.base.json ./
+
+# ---- 运行时 ----
+FROM node:20-alpine
+
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY --from=builder /app/ /app/
+
+EXPOSE 3000
+
+CMD ["npx", "tsx", "mock-server/src/index.ts"]

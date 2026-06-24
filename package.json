@@ -1,0 +1,42 @@
+{
+  "name": "mf-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "基于 Module Federation 的微前端后台管理系统",
+  "scripts": {
+    "dev": "concurrently -n mock,shell,sysadmin,business -c green,blue,magenta,yellow \"pnpm:dev:mock\" \"pnpm:dev:shell\" \"pnpm:dev:system-admin\" \"pnpm:dev:business\"",
+    "dev:mf": "concurrently -n mock,shell,syswatch,syspreview,bizwatch,bizpreview -c green,blue,magenta,cyan,yellow,white \"pnpm:dev:mock\" \"pnpm:dev:shell\" \"pnpm --filter system-admin build:dev:watch\" \"pnpm --filter system-admin preview:mf\" \"pnpm --filter business build:dev:watch\" \"pnpm --filter business preview:mf\"",
+    "dev:mock": "pnpm --filter mock-server dev",
+    "dev:shell": "pnpm --filter shell dev --mode dev",
+    "dev:system-admin": "pnpm --filter system-admin dev --mode dev",
+    "dev:business": "pnpm --filter business dev --mode dev",
+    "build": "pnpm -r --filter=./apps/* build:prod",
+    "build:dev": "pnpm -r --filter=./apps/* build:dev",
+    "build:test": "pnpm -r --filter=./apps/* build:test",
+    "build:uat": "pnpm -r --filter=./apps/* build:uat",
+    "build:prod": "pnpm -r --filter=./apps/* build:prod",
+    "build:docker": "pnpm -r --filter=./apps/* build:docker",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "install:all": "pnpm install"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.0.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vue": "^3.5.0",
+      "vue-router": "^4.5.0",
+      "pinia": "^3.0.0",
+      "element-plus": "^2.14.0",
+      "@element-plus/icons-vue": "^2.3.1"
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

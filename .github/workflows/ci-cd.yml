@@ -1,0 +1,194 @@
+# ============================================================
+# CI/CD Pipeline — 微前端持续集成与部署
+# ============================================================
+# 触发条件：推送到 main/develop 分支 或 手动触发
+#
+# 流程：
+#   1. 代码检出 + 环境准备 (Node 20 + pnpm)
+#   2. 依赖安装
+#   3. 类型检查
+#   4. 构建（remote-first 顺序）
+#   5. Docker 镜像构建 & 推送
+#
+# 关键：子应用必须先于主应用构建和部署
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+          - dev
+          - test
+          - uat
+          - prod
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+
+jobs:
+  # ==================== 阶段1：质量检查 ====================
+  quality-check:
+    name: 类型检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: |
+          npx vue-tsc --noEmit -p apps/shell/tsconfig.json
+          npx vue-tsc --noEmit -p apps/system-admin/tsconfig.json
+          npx vue-tsc --noEmit -p apps/business/tsconfig.json
+
+  # ==================== 阶段2：构建子应用（remote-first） ====================
+  build-remotes:
+    name: 构建子应用 (${{ matrix.app }})
+    needs: quality-check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [system-admin, business]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build ${{ matrix.app }}
+        run: pnpm --filter ${{ matrix.app }} build:${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'test') }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.app }}
+          path: apps/${{ matrix.app }}/dist/
+          retention-days: 7
+
+      - name: Build Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker build \
+            -f deploy/Dockerfile \
+            --build-arg APP_NAME=${{ matrix.app }} \
+            --build-arg BUILD_MODE=prod \
+            -t ghcr.io/${{ github.repository }}/${{ matrix.app }}:latest \
+            -t ghcr.io/${{ github.repository }}/${{ matrix.app }}:${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/${{ github.repository }}/${{ matrix.app }}:latest
+          docker push ghcr.io/${{ github.repository }}/${{ matrix.app }}:${{ github.sha }}
+
+  # ==================== 阶段3：构建主应用 ====================
+  build-shell:
+    name: 构建主应用 (shell)
+    needs: build-remotes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shell
+        run: pnpm --filter shell build:${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'prod' || 'test') }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-shell
+          path: apps/shell/dist/
+          retention-days: 7
+
+      - name: Build Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker build \
+            -f deploy/Dockerfile \
+            --build-arg APP_NAME=shell \
+            --build-arg BUILD_MODE=prod \
+            -t ghcr.io/${{ github.repository }}/shell:latest \
+            -t ghcr.io/${{ github.repository }}/shell:${{ github.sha }} \
+            .
+
+      - name: Push Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/${{ github.repository }}/shell:latest
+          docker push ghcr.io/${{ github.repository }}/shell:${{ github.sha }}
+
+  # ==================== 阶段4：部署 ====================
+  deploy:
+    name: 部署到 ${{ github.event.inputs.environment || 'test' }}
+    needs: [build-remotes, build-shell]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'test' }}
+    steps:
+      - name: Deploy notification
+        run: |
+          echo "=== 部署概要 ==="
+          echo "环境: ${{ github.event.inputs.environment || 'test' }}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+          echo "镜像版本:"
+          echo "  shell:         ghcr.io/${{ github.repository }}/shell:${{ github.sha }}"
+          echo "  system-admin:  ghcr.io/${{ github.repository }}/system-admin:${{ github.sha }}"
+          echo "  business:      ghcr.io/${{ github.repository }}/business:${{ github.sha }}"
+          echo ""
+          echo "请在目标服务器执行:"
+          echo "  docker-compose pull"
+          echo "  docker-compose up -d"
+          echo ""
+          echo "部署顺序（remote-first）:"
+          echo "  1. docker-compose up -d mf-business"
+          echo "  2. docker-compose up -d mf-system-admin"
+          echo "  3. docker-compose up -d mf-shell"

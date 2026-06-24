@@ -1,0 +1,80 @@
+# ============================================================
+# Docker Compose — 微前端全栈编排
+# ============================================================
+# 启动：
+#   docker-compose up -d --build
+#
+# 架构：
+#   ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+#   │  mf-shell    │────▶│ mf-sysadmin  │     │ mf-business  │
+#   │  :8080       │────▶│ (internal)   │     │ (internal)   │
+#   └──────┬───────┘     └──────────────┘     └──────────────┘
+#          │
+#          ▼
+#   ┌──────────────┐
+#   │  mf-backend  │
+#   │  :3000       │
+#   └──────────────┘
+#
+# 部署顺序（remote-first）：
+#   1. mf-business  （子应用先部署）
+#   2. mf-system-admin
+#   3. mf-shell     （主应用最后部署）
+
+services:
+  # ---- Mock Server (后端 API) ----
+  mf-backend:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.mock
+    ports:
+      - "3000:3000"
+    networks:
+      - mf-network
+    restart: unless-stopped
+
+  # ---- business 子应用 ----
+  mf-business:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+      args:
+        APP_NAME: business
+        BUILD_MODE: docker
+    networks:
+      - mf-network
+    restart: unless-stopped
+
+  # ---- system-admin 子应用 ----
+  mf-system-admin:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+      args:
+        APP_NAME: system-admin
+        BUILD_MODE: docker
+    networks:
+      - mf-network
+    restart: unless-stopped
+
+  # ---- Shell 主应用 ----
+  mf-shell:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+      args:
+        APP_NAME: shell
+        BUILD_MODE: docker
+    ports:
+      - "8080:80"
+    depends_on:
+      - mf-system-admin
+      - mf-business
+      - mf-backend
+    networks:
+      - mf-network
+    restart: unless-stopped
+
+networks:
+  mf-network:
+    driver: bridge
