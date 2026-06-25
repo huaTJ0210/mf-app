@@ -35,16 +35,16 @@
 
 ## 技术栈
 
-| 分类 | 技术 |
-|------|------|
-| 框架 | Vue 3.5 + TypeScript 5.6 |
-| UI 库 | Element Plus 2.14 |
-| 状态管理 | Pinia 3.0 |
-| 路由 | Vue Router 4.5 |
-| 构建工具 | Vite 5.4 + @originjs/vite-plugin-federation 1.4 |
-| 包管理 | pnpm 10 (workspace monorepo) |
-| Mock 服务 | Express 4 + tsx |
-| 部署 | Docker + Nginx |
+| 分类      | 技术                                            |
+| --------- | ----------------------------------------------- |
+| 框架      | Vue 3.5 + TypeScript 5.6                        |
+| UI 库     | Element Plus 2.14                               |
+| 状态管理  | Pinia 3.0                                       |
+| 路由      | Vue Router 4.5                                  |
+| 构建工具  | Vite 5.4 + @originjs/vite-plugin-federation 1.4 |
+| 包管理    | pnpm 10 (workspace monorepo)                    |
+| Mock 服务 | Express 4 + tsx                                 |
+| 部署      | Docker + Nginx                                  |
 
 ## 目录结构
 
@@ -136,20 +136,20 @@ pnpm dev:mf
 
 启动后访问：
 
-| 服务 | 地址 |
-|------|------|
-| Shell 主应用 | http://localhost:5003 |
-| system-admin 子应用（独立模式） | http://localhost:5001 |
-| business 子应用（独立模式） | http://localhost:5002 |
-| Mock Server API | http://localhost:3000/api |
+| 服务                            | 地址                      |
+| ------------------------------- | ------------------------- |
+| Shell 主应用                    | http://localhost:5003     |
+| system-admin 子应用（独立模式） | http://localhost:5001     |
+| business 子应用（独立模式）     | http://localhost:5002     |
+| Mock Server API                 | http://localhost:3000/api |
 
 ### 测试账号
 
-| 账号 | 密码 | 角色 | 权限范围 |
-|------|------|------|---------|
-| admin | 123456 | 超级管理员 | 全部菜单 + 全部按钮权限 |
-| editor | 123456 | 业务编辑员 | 首页 + 业务模块 |
-| viewer | 123456 | 访客 | 仅首页 |
+| 账号   | 密码   | 角色       | 权限范围                |
+| ------ | ------ | ---------- | ----------------------- |
+| admin  | 123456 | 超级管理员 | 全部菜单 + 全部按钮权限 |
+| editor | 123456 | 业务编辑员 | 首页 + 业务模块         |
+| viewer | 123456 | 访客       | 仅首页                  |
 
 ### 单独启动某个服务
 
@@ -164,24 +164,24 @@ pnpm dev:business      # 仅启动 business 子应用
 
 每个应用支持 5 套环境配置文件：
 
-| 文件 | 环境 | 说明 |
-|------|------|------|
-| `.env` | 基础 | 所有环境共享的变量 |
-| `.env.dev` | 开发 | 本地开发，连接本地 Mock Server |
-| `.env.test` | 测试 | 测试环境，连接测试 API |
-| `.env.uat` | 预发布 | UAT 环境 |
-| `.env.prod` | 生产 | 生产环境，连接 CDN 和生产 API |
+| 文件          | 环境   | 说明                                 |
+| ------------- | ------ | ------------------------------------ |
+| `.env`        | 基础   | 所有环境共享的变量                   |
+| `.env.dev`    | 开发   | 本地开发，连接本地 Mock Server       |
+| `.env.test`   | 测试   | 测试环境，连接测试 API               |
+| `.env.uat`    | 预发布 | UAT 环境                             |
+| `.env.prod`   | 生产   | 生产环境，连接 CDN 和生产 API        |
 | `.env.docker` | Docker | Docker Compose 部署，通过 Nginx 代理 |
 
 ### 关键环境变量
 
-| 变量 | 说明 |
-|------|------|
-| `VITE_API_BASE_URL` | 后端 API 基础路径 |
-| `VITE_PORT` | 开发服务器端口 |
+| 变量                           | 说明                                    |
+| ------------------------------ | --------------------------------------- |
+| `VITE_API_BASE_URL`            | 后端 API 基础路径                       |
+| `VITE_PORT`                    | 开发服务器端口                          |
 | `VITE_SYSTEM_ADMIN_REMOTE_URL` | system-admin 子应用 remoteEntry.js 地址 |
-| `VITE_BUSINESS_REMOTE_URL` | business 子应用 remoteEntry.js 地址 |
-| `VITE_STANDALONE` | 子应用是否独立运行模式 |
+| `VITE_BUSINESS_REMOTE_URL`     | business 子应用 remoteEntry.js 地址     |
+| `VITE_STANDALONE`              | 子应用是否独立运行模式                  |
 
 当前 `dev` 环境默认端口：
 
@@ -238,12 +238,12 @@ pnpm dev:business      # 仅启动 business 子应用
 
 菜单数据中的 `component` 字段是字符串，通过组件映射器解析为懒加载组件：
 
-| component 值 | 解析结果 |
-|---|---|
-| `Layout` | 路由分组占位组件（仅承载子路由，不重复渲染 Shell 顶层布局） |
-| `shell/Dashboard` | Shell 本地视图 `views/dashboard/index.vue` |
-| `system-admin/UserList` | 通过 MF 远程加载 system-admin 的 UserList |
-| `business/Orders` | 通过 MF 远程加载 business 的 Orders |
+| component 值            | 解析结果                                                    |
+| ----------------------- | ----------------------------------------------------------- |
+| `Layout`                | 路由分组占位组件（仅承载子路由，不重复渲染 Shell 顶层布局） |
+| `shell/Dashboard`       | Shell 本地视图 `views/dashboard/index.vue`                  |
+| `system-admin/UserList` | 通过 MF 远程加载 system-admin 的 UserList                   |
+| `business/Orders`       | 通过 MF 远程加载 business 的 Orders                         |
 
 ### 子应用独立模式
 
@@ -363,3 +363,20 @@ pnpm dev:mf
 
 动态路由中的 `Layout` 仅用于目录分组，不应再次映射为 Shell 顶层布局。  
 项目已将其映射为路由占位组件（仅 `router-view`），避免双层布局重复渲染。
+
+## Module Federation 与乾坤对比
+
+| 对比维度     | 当前方案：Module Federation（Vite 插件）        | 乾坤（qiankun）                         |
+| ------------ | ----------------------------------------------- | --------------------------------------- |
+| 架构形态     | 运行时“模块级”拼装（remote module）             | 运行时“应用级”加载（micro app）         |
+| 性能与体积   | **更优**：依赖可共享、按需加载更细粒度          | 通常偏重：子应用更像完整应用被加载      |
+| 依赖复用     | **强**：`shared` 可做单例（如 vue/pinia）       | 可复用但治理成本更高，重复依赖更常见    |
+| 技术栈兼容   | 更适合同技术栈、同构建体系                      | **更强**：异构技术栈接入更友好          |
+| 隔离能力     | 原生隔离较弱，靠规范治理冲突                    | **更强**：内置沙箱、样式隔离机制        |
+| 接入复杂度   | 中等：需处理 exposes/remotes/static import 约束 | 中等偏低：注册子应用 + 生命周期即可启动 |
+| 调试体验     | 同栈项目体验好，接近本地模块开发                | 跨应用生命周期与通信调试成本更高        |
+| 路由整合     | 宿主主导，组件/页面映射灵活                     | 以子应用挂载/卸载为中心，路由边界更明显 |
+| 独立部署     | 支持，`remoteEntry` 驱动                        | 支持，子应用独立发布                    |
+| 适配当前项目 | **高匹配**（Vue3 + Vite + shared 包统一）       | 可用，但优势主要在异构和强隔离场景      |
+
+**结论**：当前项目采用 Module Federation 是更合适的，优势在性能、共享依赖与统一技术栈协同；若未来演进为多技术栈并存且隔离诉求更强，可再评估乾坤。

@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
           'element-plus': { singleton: true, requiredVersion: '^2.14.0' },
           '@element-plus/icons-vue': { singleton: true, requiredVersion: '^2.3.1' },
           '@mf/shared': { singleton: true },
-        },
+        } as Record<string, { singleton: boolean; requiredVersion?: string }>,
       }),
       AutoImport({
         resolvers: [ElementPlusResolver()],

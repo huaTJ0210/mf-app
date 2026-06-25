@@ -1,11 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { Ref } from 'vue'
 import type { RouteRecordRaw } from 'vue-router'
 import type { MenuItem } from '../types'
 import { buildRoutes, type ComponentResolver } from '../utils/permission'
 import { useUserStore } from './user'
 
-export const usePermissionStore = defineStore('permission', () => {
+type PermissionStoreSetup = {
+  routes: Ref<RouteRecordRaw[]>
+  sidebarMenus: Ref<MenuItem[]>
+  hasRoutes: Ref<boolean>
+  setResolver: (resolver: ComponentResolver) => void
+  generateRoutes: (menus: MenuItem[], resolve?: ComponentResolver) => RouteRecordRaw[]
+  hasPermission: (value: string | string[]) => boolean
+  reset: () => void
+}
+
+const createPermissionStore = (): PermissionStoreSetup => {
   // ---- state ----
   /** 动态生成的路由（已添加到 router） */
   const routes = ref<RouteRecordRaw[]>([])
@@ -66,4 +77,6 @@ export const usePermissionStore = defineStore('permission', () => {
     hasPermission,
     reset,
   }
-})
+}
+
+export const usePermissionStore = defineStore('permission', createPermissionStore)

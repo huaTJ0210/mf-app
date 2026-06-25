@@ -76,7 +76,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /** 子应用独立运行时植入 mock 用户数据 */
-  function setMockUser(mockUser: Partial<User> & { roles?: string[]; permissions?: string[] }): void {
+  function setMockUser(
+    mockUser: Partial<User> & { roles?: string[]; permissions?: string[] }
+  ): void {
     userId.value = mockUser.id ?? 1
     username.value = mockUser.username ?? 'standalone'
     nickname.value = mockUser.nickname ?? '独立开发模式'
